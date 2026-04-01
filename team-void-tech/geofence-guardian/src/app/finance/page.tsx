@@ -36,6 +36,9 @@ export default function FinancePage() {
   // Real-time Toast State
   const [activeToast, setActiveToast] = useState<{ amount: number; source: string } | null>(null);
 
+  // Search State
+  const [searchTerm, setSearchTerm] = useState('');
+
   // Save transactions
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
@@ -54,6 +57,45 @@ export default function FinancePage() {
   }, [transactions]);
 
   const balance = totals.income - totals.expense;
+
+  // 1. Filter Transactions by Search Term
+  const filteredTransactions = useMemo(() => {
+    if (!searchTerm.trim()) return transactions;
+    const term = searchTerm.toLowerCase();
+    return transactions.filter(t => 
+      t.category.toLowerCase().includes(term) || 
+      (t.note && t.note.toLowerCase().includes(term))
+    );
+  }, [transactions, searchTerm]);
+
+  // 2. Group Transactions by Date
+  const groupedTransactions = useMemo(() => {
+    const groups: { [key: string]: FinanceTransaction[] } = {};
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const yesterday = today - 86400000;
+
+    filteredTransactions.forEach(t => {
+      const d = new Date(t.date);
+      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+      
+      let label = '';
+      if (dayStart === today) label = 'Today';
+      else if (dayStart === yesterday) label = 'Yesterday';
+      else {
+        label = new Intl.DateTimeFormat('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        }).format(d);
+      }
+
+      if (!groups[label]) groups[label] = [];
+      groups[label].push(t);
+    });
+
+    return groups;
+  }, [filteredTransactions]);
 
   const handleAddTransaction = (e: React.FormEvent) => {
     e.preventDefault();
@@ -293,46 +335,90 @@ export default function FinancePage() {
 
       {/* Transaction History */}
       <div className="flex flex-col gap-4 flex-1">
-        <h2 className="text-lg font-bold text-gray-800">Transaction History</h2>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-bold text-gray-800">Transaction History</h2>
+          
+          {/* Search Bar */}
+          {transactions.length > 0 && (
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search category or note..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
+            </div>
+          )}
+        </div>
+
         {transactions.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
-            <p>No transactions yet.</p>
+          <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <p className="text-gray-500 font-medium">No transactions yet</p>
+            <p className="text-xs text-gray-400 mt-1">Your expenses & income will appear here</p>
+          </div>
+        ) : filteredTransactions.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 font-medium">No results found</p>
+            <p className="text-xs text-gray-400 mt-1">Try a different search term</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {transactions.map((t) => (
-              <div key={t.id} className="bg-white p-4 rounded-xl border border-gray-100 flex items-center justify-between shadow-sm group">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    t.type === 'income' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                  }`}>
-                    {t.type === 'income' ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" />
-                      </svg>
-                    ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M20 12H4" />
-                      </svg>
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-800">{t.category}</p>
-                    <p className="text-xs text-gray-400">{t.note || 'No note'}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className={`font-bold text-lg ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                    {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
-                  </span>
-                  <button 
-                    onClick={() => removeTransaction(t.id)}
-                    className="p-2 text-gray-200 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+          <div className="flex flex-col gap-6">
+            {Object.keys(groupedTransactions).map((date) => (
+              <div key={date} className="flex flex-col gap-3">
+                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">{date}</h3>
+                <div className="flex flex-col gap-2">
+                  {groupedTransactions[date].map((t) => (
+                    <div key={t.id} className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm group hover:border-blue-100 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                          t.type === 'income' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                        }`}>
+                          {t.type === 'income' ? (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4" />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900 leading-none mb-1">{t.category}</p>
+                          <p className="text-[11px] text-gray-400 font-medium truncate max-w-[150px]">{t.note || 'No description'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className={`font-black text-base ${t.type === 'income' ? 'text-green-600' : 'text-red-900'}`}>
+                            {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
+                          </p>
+                          <p className="text-[9px] text-gray-300 font-bold uppercase tracking-tighter">
+                            {new Date(t.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        <button 
+                          onClick={() => removeTransaction(t.id)}
+                          className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}

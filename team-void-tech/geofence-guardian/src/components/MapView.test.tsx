@@ -5,9 +5,9 @@ import { GeoPosition, SafeZone } from '../types';
 
 // Mock Leaflet and react-leaflet because MapContainer needs a real DOM Map
 jest.mock('react-leaflet', () => ({
-  MapContainer: ({ children }: any) => <div data-testid="map-container">{children}</div>,
+  MapContainer: ({ children }: { children: React.ReactNode }) => <div data-testid="map-container">{children}</div>,
   TileLayer: () => <div data-testid="tile-layer" />,
-  Marker: (props: any) => (
+  Marker: (props: { icon?: { options?: { className?: string } } }) => (
     <div data-testid="marker" className={props.icon?.options?.className} />
   ),
   Circle: () => <div data-testid="circle" />,
