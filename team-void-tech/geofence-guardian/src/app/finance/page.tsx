@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { FinanceTransaction } from '../../types';
 import { smsService } from '../../services/smsService';
+import { useSMSListener } from '../../hooks/useSMSListener';
 
 const STORAGE_KEY = 'geofence_guardian_finance';
 
@@ -31,6 +32,9 @@ export default function FinancePage() {
   const [detectedItems, setDetectedItems] = useState<FinanceTransaction[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState('');
+
+  // Real-time Toast State
+  const [activeToast, setActiveToast] = useState<{ amount: number; source: string } | null>(null);
 
   // Save transactions
   useEffect(() => {
@@ -103,10 +107,43 @@ export default function FinancePage() {
     smsService.markAsProcessed([id.replace('sms-', '')]);
   };
 
+  // 1. Initialize Real-time Listener
+  const handleIncomingTransaction = (transaction: FinanceTransaction) => {
+    setTransactions(prev => [transaction, ...prev]);
+    setActiveToast({ amount: transaction.amount, source: transaction.category });
+    
+    // Auto-hide toast after 5 seconds
+    setTimeout(() => setActiveToast(null), 5000);
+  };
+
+  useSMSListener(handleIncomingTransaction);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col p-6 gap-6 relative pb-32">
       {/* Header */}
       <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Finance Dashboard</h1>
+
+      {/* Real-time Notification Toast */}
+      {activeToast && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-sm animate-[slideIn_0.3s_ease-out]">
+          <div className="bg-gray-900 text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4 border border-white/10 backdrop-blur-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                <span className="text-green-500 text-xl font-bold">₹</span>
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Income Detected!</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-widest">₹{activeToast.amount.toLocaleString('en-IN')} via SMS</p>
+              </div>
+            </div>
+            <button onClick={() => setActiveToast(null)} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 shrink-0">
