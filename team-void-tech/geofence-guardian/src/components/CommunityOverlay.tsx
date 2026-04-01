@@ -46,10 +46,10 @@ export default function CommunityOverlay({
   // Fetch landmarks when entering create tab if we have user position
   useEffect(() => {
     if (activeTab === 'create' && userPosition && landmarks.length === 0) {
-      setIsLoadingLandmarks(true);
+      setTimeout(() => setIsLoadingLandmarks(true), 0);
       getNearbyLandmarks(userPosition.lat, userPosition.lng, 10).then((places) => {
         setLandmarks(places);
-        setIsLoadingLandmarks(false);
+        setTimeout(() => setIsLoadingLandmarks(false), 0);
       });
     }
   }, [activeTab, userPosition, landmarks.length]);

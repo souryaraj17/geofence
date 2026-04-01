@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { FinanceTransaction } from '../../types';
+import { smsService } from '../../services/smsService';
 
 const STORAGE_KEY = 'geofence_guardian_finance';
 
@@ -25,6 +26,11 @@ export default function FinancePage() {
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [category, setCategory] = useState('');
   const [note, setNote] = useState('');
+
+  // Scan State
+  const [detectedItems, setDetectedItems] = useState<FinanceTransaction[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanError, setScanError] = useState('');
 
   // Save transactions
   useEffect(() => {
@@ -69,6 +75,34 @@ export default function FinancePage() {
     setTransactions(transactions.filter((t) => t.id !== id));
   };
 
+  const handleScanSMS = async () => {
+    setIsScanning(true);
+    setScanError('');
+    try {
+      const newItems = await smsService.scanForIncome();
+      setDetectedItems(newItems);
+      if (newItems.length === 0) {
+        setScanError('No new income messages found in the last 50 messages.');
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setScanError(message || 'Failed to scan SMS. Make sure you are on Android.');
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const confirmDetectedItem = (item: FinanceTransaction) => {
+    setTransactions([item, ...transactions]);
+    setDetectedItems(prev => prev.filter(i => i.id !== item.id));
+    smsService.markAsProcessed([item.id.replace('sms-', '')]);
+  };
+
+  const dismissDetectedItem = (id: string) => {
+    setDetectedItems(prev => prev.filter(i => i.id !== id));
+    smsService.markAsProcessed([id.replace('sms-', '')]);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col p-6 gap-6 relative pb-32">
       {/* Header */}
@@ -76,24 +110,88 @@ export default function FinancePage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 shrink-0">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-1">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Balance</span>
-          <span className={`text-4xl font-black ${balance >= 0 ? 'text-blue-600' : 'text-red-500'}`}>
-            ${balance.toLocaleString()}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-1 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50" />
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest relative z-10">Total Balance</span>
+          <span className={`text-4xl font-black relative z-10 ${balance >= 0 ? 'text-blue-600' : 'text-red-500'}`}>
+            ₹{balance.toLocaleString('en-IN')}
           </span>
         </div>
         
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-1">
             <span className="text-xs font-bold text-green-500 uppercase tracking-widest">Income</span>
-            <span className="text-xl font-bold text-gray-800">${totals.income.toLocaleString()}</span>
+            <span className="text-xl font-bold text-gray-800">₹{totals.income.toLocaleString('en-IN')}</span>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-1">
             <span className="text-xs font-bold text-red-500 uppercase tracking-widest">Expenses</span>
-            <span className="text-xl font-bold text-gray-800">${totals.expense.toLocaleString()}</span>
+            <span className="text-xl font-bold text-gray-800">₹{totals.expense.toLocaleString('en-IN')}</span>
           </div>
         </div>
       </div>
+
+      {/* SMS Scan Trigger */}
+      <div className="flex flex-col gap-3">
+        <button
+          onClick={handleScanSMS}
+          disabled={isScanning}
+          className="w-full py-4 bg-blue-50 text-blue-600 font-bold rounded-2xl border-2 border-dashed border-blue-200 flex items-center justify-center gap-3 hover:bg-blue-100 transition-colors disabled:opacity-50"
+        >
+          {isScanning ? (
+            <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          )}
+          {isScanning ? 'Scanning Inbox...' : 'Scan SMS for Income'}
+        </button>
+        {scanError && <p className="text-xs text-center text-amber-600 font-medium">{scanError}</p>}
+      </div>
+
+      {/* Detected Items Review Section */}
+      {detectedItems.length > 0 && (
+        <div className="flex flex-col gap-4 animate-[slideIn_0.3s_ease-out]">
+          <div className="flex justify-between items-center px-1">
+            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              Detected from SMS
+            </h2>
+            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+              {detectedItems.length} found
+            </span>
+          </div>
+          <div className="flex flex-col gap-3">
+            {detectedItems.map((item) => (
+              <div key={item.id} className="bg-green-50/50 border border-green-100 p-4 rounded-2xl flex flex-col gap-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-bold text-gray-900">₹{item.amount.toLocaleString('en-IN')}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{item.note}</p>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-tighter text-green-600 bg-white px-2 py-0.5 rounded shadow-sm">
+                    Income
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => confirmDetectedItem(item)}
+                    className="flex-1 py-2 bg-green-600 text-white text-xs font-bold rounded-lg shadow-sm active:scale-95 transition-transform"
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    onClick={() => dismissDetectedItem(item.id)}
+                    className="flex-1 py-2 bg-white text-gray-500 text-xs font-bold rounded-lg border border-gray-200 active:scale-95 transition-transform"
+                  >
+                    Discard
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Add Transaction Form */}
       <form onSubmit={handleAddTransaction} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4">
@@ -188,7 +286,7 @@ export default function FinancePage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <span className={`font-bold text-lg ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                    {t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()}
+                    {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
                   </span>
                   <button 
                     onClick={() => removeTransaction(t.id)}
