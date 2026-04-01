@@ -23,12 +23,36 @@ interface MapViewProps {
 }
 
 // Fix Leaflet Default Icon path issues in Next.js/Webpack
-const createCustomIcon = (color: 'blue' | 'red') => {
+const createUserIcon = () => {
+  return L.divIcon({
+    className: 'custom-user-icon',
+    html: `
+      <div style="font-size: 28px; line-height: 1; filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));">
+        🚶‍♂️
+      </div>
+      <div style="
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 4px;
+        background-color: rgba(0,0,0,0.3);
+        border-radius: 50%;
+        filter: blur(2px);
+      "></div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 30], // Anchor at the feet
+  });
+};
+
+const createCustomIcon = (color: 'red') => {
   return L.divIcon({
     className: 'custom-div-icon',
     html: `
       <div style="
-        background-color: ${color === 'blue' ? '#3b82f6' : '#ef4444'};
+        background-color: #ef4444;
         width: 16px;
         height: 16px;
         border-radius: 50%;
@@ -41,13 +65,12 @@ const createCustomIcon = (color: 'blue' | 'red') => {
         left: -8px;
         width: 32px;
         height: 32px;
-        background-color: ${color === 'blue' ? '#3b82f6' : '#ef4444'};
+        background-color: #ef4444;
         border-radius: 50%;
         opacity: 0.3;
-        animation: pulse-${color} 2s infinite ease-out;
+        animation: pulse-red 2s infinite ease-out;
       "></div>
       <style>
-        @keyframes pulse-blue { 0% { transform: scale(0.5); opacity: 0.5; } 100% { transform: scale(2); opacity: 0; } }
         @keyframes pulse-red { 0% { transform: scale(0.5); opacity: 0.5; } 100% { transform: scale(2); opacity: 0; } }
       </style>
     `,
@@ -96,7 +119,7 @@ export default function MapView({ userPosition, safeZone }: MapViewProps) {
         {userPosition && (
           <Marker 
             position={[userPosition.lat, userPosition.lng]} 
-            icon={createCustomIcon('blue')}
+            icon={createUserIcon()}
           />
         )}
 

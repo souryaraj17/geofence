@@ -67,13 +67,16 @@ export default function GeofencePage() {
     }
   }, [safeZone]);
 
-  // Evaluate Geofence Logic
-  const checkGeofence = useCallback((currentPos: GeoPosition) => {
-    if (!safeZone) return;
+  // Evaluate Geofence whenever position or safe zone changes
+  useEffect(() => {
+    if (!safeZone || !userPosition) {
+      if (!safeZone) setStatus('unknown');
+      return;
+    }
 
     const inside = isInsideGeofence(
-      currentPos.lat,
-      currentPos.lng,
+      userPosition.lat,
+      userPosition.lng,
       safeZone.center.lat,
       safeZone.center.lng,
       safeZone.radius
@@ -86,8 +89,11 @@ export default function GeofencePage() {
       notificationService.sendGeofenceAlert();
       setShowAlert(true);
     }
-    setStatus(newStatus);
-  }, [safeZone, status]);
+    
+    if (status !== newStatus) {
+      setStatus(newStatus);
+    }
+  }, [userPosition, safeZone, status]);
 
   // Toggle Live Tracking
   const toggleTracking = useCallback(() => {
@@ -102,13 +108,11 @@ export default function GeofencePage() {
           return;
         }
         setUserPosition(pos);
-        // If safe zone is active, check immediately
-        if (safeZone) {
-          checkGeofence(pos);
-        }
+        // We removed the stale closure checkGeofence here,
+        // the useEffect will handle it automatically when userPosition updates.
       });
     }
-  }, [trackingState, safeZone, checkGeofence]);
+  }, [trackingState]);
 
   return (
     <main className="relative w-full h-screen overflow-hidden bg-gray-50">
