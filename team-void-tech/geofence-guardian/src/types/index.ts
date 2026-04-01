@@ -23,6 +23,13 @@ export interface CommunityEvent {
   isInterested?: boolean;
 }
 
+export interface NearbyUser {
+  id: string;
+  position: GeoPosition;
+  avatarSeed: number; // For generating a random generic avatar (Snapchat style)
+  lastSeen: string; // ISO String
+}
+
 export interface FinanceTransaction {
   id: string;
   amount: number;

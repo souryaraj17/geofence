@@ -29,7 +29,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-lg border-t border-gray-100 flex justify-around items-center px-4 py-3 pb-8 md:pb-4 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-white/90 backdrop-blur-2xl border border-white/40 flex justify-around items-center px-6 py-3 rounded-full shadow-[0_12px_40px_rgba(0,0,0,0.12)] w-[90%] max-w-sm">
       {navItems.map((item) => {
         const isActive = pathname?.startsWith(item.path);
         return (
@@ -37,13 +37,13 @@ export default function BottomNav() {
             key={item.path}
             href={item.path}
             className={`flex flex-col items-center gap-1 transition-all duration-300 ${
-              isActive ? 'text-blue-600 scale-110' : 'text-gray-400 hover:text-gray-600'
+              isActive ? 'text-gray-900 scale-105' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
-            <div className={`p-1 rounded-xl transition-colors ${isActive ? 'bg-blue-50' : 'bg-transparent'}`}>
+            <div className={`p-2 rounded-full transition-all duration-300 ${isActive ? 'bg-gray-100 shadow-sm' : 'bg-transparent'}`}>
               {item.icon}
             </div>
-            <span className={`text-[10px] uppercase tracking-widest font-bold ${isActive ? 'opacity-100' : 'opacity-60'}`}>
+            <span className={`text-[10px] font-bold ${isActive ? 'opacity-100 text-gray-900' : 'opacity-0 h-0 overflow-hidden'}`}>
               {item.label}
             </span>
           </Link>

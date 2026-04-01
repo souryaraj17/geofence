@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { GeoPosition, SafeZone, CommunityEvent } from '../types';
+import { GeoPosition, SafeZone, CommunityEvent, NearbyUser } from '../types';
 
 // ─── Map Center Update (initial GPS sync) ───────────────────────────────────
 function MapUpdater({ center }: { center: GeoPosition | null }) {
@@ -33,6 +33,7 @@ interface MapViewProps {
   userPosition: GeoPosition | null;
   safeZone: SafeZone | null;
   events?: CommunityEvent[];
+  nearbyUsers?: NearbyUser[];
   /** The event the user tapped "View on Map" for — triggers a smooth fly-to */
   focusedEvent?: CommunityEvent | null;
 }
@@ -63,6 +64,43 @@ const createUserIcon = () => {
 };
 
 // ─── Custom Marker Icons ─────────────────────────────────────────────────────
+const createNearbyUserIcon = (seed: number) => {
+  // Use a mix of generic emojis to mimic snapchat bitmoji proxies
+  const avatars = ['🧑‍🦱', '👩‍🦰', '🧔‍♂️', '👱‍♀️', '👲', '👩‍🎤', '👨‍🎤', '🕵️‍♀️', '🦸‍♂️', '🥷'];
+  const char = avatars[seed % avatars.length];
+  const colors = ['#f43f5e', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b'];
+  const color = colors[seed % colors.length];
+
+  return L.divIcon({
+    className: 'custom-nearby-icon',
+    html: `
+      <div style="
+        position: relative;
+        width: 38px; height: 38px;
+        display: flex; align-items: center; justify-content: center;
+        background-color: white;
+        border-radius: 50%;
+        border: 3px solid ${color};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-size: 20px;
+        z-index: 10;
+      ">
+        ${char}
+        <div style="
+          position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+          width: 8px; height: 8px;
+          background-color: ${color};
+          border-radius: 50%;
+          border: 2px solid white;
+        "></div>
+      </div>
+    `,
+    iconSize: [38, 38],
+    iconAnchor: [19, 38], // anchor at the bottom pip
+    popupAnchor: [0, -38]
+  });
+};
+
 const createCustomIcon = (color: 'blue' | 'red' | 'purple') => {
   const hexColor = color === 'blue' ? '#3b82f6' : color === 'red' ? '#ef4444' : '#a855f7';
   return L.divIcon({
@@ -96,7 +134,7 @@ const createCustomIcon = (color: 'blue' | 'red' | 'purple') => {
 };
 
 // ─── Main Map Component ───────────────────────────────────────────────────────
-export default function MapView({ userPosition, safeZone, events = [], focusedEvent = null }: MapViewProps) {
+export default function MapView({ userPosition, safeZone, events = [], nearbyUsers = [], focusedEvent = null }: MapViewProps) {
   const defaultCenter = { lat: 0, lng: 0 };
   const center = userPosition || defaultCenter;
   const [initialSyncDone, setInitialSyncDone] = useState(false);
@@ -133,8 +171,33 @@ export default function MapView({ userPosition, safeZone, events = [], focusedEv
           <Marker 
             position={[userPosition.lat, userPosition.lng]} 
             icon={createUserIcon()}
-          />
+          >
+            <Popup className="rounded-xl overflow-hidden shadow-lg border-0">
+              <div className="p-1 px-2 text-center">
+                <span className="font-bold text-gray-900 text-sm">You are here</span>
+              </div>
+            </Popup>
+          </Marker>
         )}
+
+        {/* Nearby Community Users (Snapchat Map Mock) */}
+        {nearbyUsers.map(user => (
+          <Marker
+            key={user.id}
+            position={[user.position.lat, user.position.lng]}
+            icon={createNearbyUserIcon(user.avatarSeed)}
+          >
+            <Popup className="rounded-xl overflow-hidden shadow-lg border-0">
+              <div className="p-2 text-center min-w-[120px]">
+                <p className="font-bold text-gray-900 mb-0.5">Nearby User</p>
+                <div className="flex items-center gap-1 mt-1 justify-center text-xs text-gray-500 font-medium bg-gray-50 px-2 py-1 rounded-full">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  Active recently
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
 
         {/* Safe Zone */}
         {safeZone && (

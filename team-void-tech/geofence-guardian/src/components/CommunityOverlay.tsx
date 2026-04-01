@@ -130,45 +130,45 @@ export default function CommunityOverlay({
 
         {/* Header */}
         <div className="flex justify-between items-center p-6 bg-white border-b border-gray-100 shrink-0">
-          <h2 className="text-2xl font-bold text-gray-800">Community</h2>
-          <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tighter">Community.</h2>
+          <button onClick={onClose} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors">
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-white px-2 pt-2 shadow-sm shrink-0">
+        <div className="flex bg-white px-4 pt-2 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.06)] shrink-0 gap-2">
           <button
             onClick={() => setActiveTab('events')}
-            className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${
-              activeTab === 'events' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400'
+            className={`flex-1 py-3 text-sm font-bold border-b-[3px] transition-colors rounded-t-lg ${
+              activeTab === 'events' ? 'border-gray-900 text-gray-900 bg-gray-50' : 'border-transparent text-gray-400 hover:text-gray-600'
             }`}
           >
-            Local Events
+            Local Activity
           </button>
           <button
             onClick={() => setActiveTab('create')}
-            className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${
-              activeTab === 'create' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400'
+            className={`flex-1 py-3 text-sm font-bold border-b-[3px] transition-colors rounded-t-lg ${
+              activeTab === 'create' ? 'border-gray-900 text-gray-900 bg-gray-50' : 'border-transparent text-gray-400 hover:text-gray-600'
             }`}
           >
-            Create Event
+            Host Event
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-5 bg-[#Fafafa]">
           {/* Events Tab */}
           {activeTab === 'events' && (
-            <div className="pb-12">
+            <div className="pb-12 flex flex-col gap-4">
               {!isLoaded ? (
                 <div className="flex justify-center p-8">
-                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-[3px] border-gray-900 border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : events.length === 0 ? (
-                <p className="text-center text-gray-500 mt-10">No local events found.</p>
+                <p className="text-center text-gray-400 mt-10 font-medium">No community activity yet.</p>
               ) : (
                 events.map((ev) => (
                   <EventCard
@@ -186,14 +186,14 @@ export default function CommunityOverlay({
 
           {/* Create Event Tab */}
           {activeTab === 'create' && (
-            <form onSubmit={handleCreate} className="flex flex-col gap-4 pb-12">
+            <form onSubmit={handleCreate} className="flex flex-col gap-5 pb-12">
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase">Event Title</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Event Title</label>
                 <input
                   required type="text" value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Neighborhood Patrol"
-                  className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white text-gray-900 font-medium"
+                  className="w-full mt-1.5 px-4 py-3.5 rounded-[1rem] border-none shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] focus:outline-none focus:bg-gray-50 bg-white text-gray-900 font-bold placeholder:font-medium transition-colors"
                 />
               </div>
 
