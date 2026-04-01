@@ -59,18 +59,20 @@ export default function Controls({
         </div>
 
         {/* Tracking Toggle */}
-        <button
-          onClick={onToggleTracking}
-          className={`w-full py-3 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2
-            ${isTracking 
-              ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' 
-              : 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-200'
-            }
-          `}
-        >
-          <div className={`w-2 h-2 rounded-full ${isTracking ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
-          {isTracking ? 'Stop Live Tracking' : 'Start Live Tracking'}
-        </button>
+        <div className="flex justify-center mt-2">
+          <button
+            onClick={onToggleTracking}
+            className={`py-1.5 px-4 rounded-full text-xs font-semibold tracking-wide transition-all duration-300 flex items-center gap-1.5
+              ${isTracking 
+                ? 'bg-red-50 text-red-600 hover:bg-red-100' 
+                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              }
+            `}
+          >
+            <div className={`w-1.5 h-1.5 rounded-full ${isTracking ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
+            {isTracking ? 'Stop Live Tracking' : 'Start Live Tracking'}
+          </button>
+        </div>
 
       </div>
     </div>

@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { GeoPosition, SafeZone, GeofenceStatus, TrackingState } from '../../types';
+import { GeoPosition, SafeZone, GeofenceStatus, TrackingState, CommunityEvent } from '../../types';
 import { locationService } from '../../services/locationService';
 import { notificationService } from '../../services/notificationService';
 import { isInsideGeofence } from '../../utils/geofence';
 import Controls from '../../components/Controls';
 import StatusBadge from '../../components/StatusBadge';
 import AlertBanner from '../../components/AlertBanner';
+import CommunityOverlay from '../../components/CommunityOverlay';
+import { useCommunity } from '../../hooks/useCommunity';
 
 // Leaflet uses 'window' which causes SSR issues, so we dynamic import MapView
 const DynamicMapView = dynamic(() => import('../../components/MapView'), {
@@ -32,6 +34,21 @@ export default function GeofencePage() {
   // UI State
   const [radius, setRadius] = useState<number>(100);
   const [showAlert, setShowAlert] = useState<boolean>(false);
+  const [isCommunityOpen, setIsCommunityOpen] = useState<boolean>(false);
+  // focusedEvent: triggers map fly-to via MapView's EventFocuser
+  const [focusedEvent, setFocusedEvent] = useState<CommunityEvent | null>(null);
+  const focusResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Lifed Community State
+  const { events, addEvent, joinEvent, removeEvent, isLoaded } = useCommunity();
+
+  // Handle event selection: fly map to event then reset after animation
+  const handleSelectEvent = useCallback((ev: CommunityEvent) => {
+    setFocusedEvent(ev);
+    // Reset after fly-to completes so re-selecting same event still fires
+    if (focusResetRef.current) clearTimeout(focusResetRef.current);
+    focusResetRef.current = setTimeout(() => setFocusedEvent(null), 2500);
+  }, []);
 
   // Initialize GPS on mount
   useEffect(() => {
@@ -117,11 +134,25 @@ export default function GeofencePage() {
   return (
     <main className="relative w-full h-screen overflow-hidden bg-gray-50">
       <StatusBadge status={status} />
+
+      {/* Community Button */}
+      <button 
+        onClick={() => setIsCommunityOpen(true)}
+        className="absolute top-6 right-4 z-40 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.1)] border border-white/20 text-blue-600 font-bold text-sm tracking-wide flex items-center gap-2 hover:bg-white transition-all active:scale-95"
+      >
+        <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        Community
+      </button>
+
       <AlertBanner isVisible={showAlert} onDismiss={() => setShowAlert(false)} />
       
-      <DynamicMapView 
-        userPosition={userPosition} 
-        safeZone={safeZone} 
+      <DynamicMapView
+        userPosition={userPosition}
+        safeZone={safeZone}
+        events={events}
+        focusedEvent={focusedEvent}
       />
       
       <Controls
@@ -131,6 +162,18 @@ export default function GeofencePage() {
         onRadiusChange={handleRadiusChange}
         isTracking={trackingState === 'tracking'}
         onToggleTracking={toggleTracking}
+      />
+
+      <CommunityOverlay
+        isOpen={isCommunityOpen}
+        onClose={() => setIsCommunityOpen(false)}
+        userPosition={userPosition}
+        events={events}
+        addEvent={addEvent}
+        joinEvent={joinEvent}
+        removeEvent={removeEvent}
+        isLoaded={isLoaded}
+        onSelectEvent={handleSelectEvent}
       />
     </main>
   );
