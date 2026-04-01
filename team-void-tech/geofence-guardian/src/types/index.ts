@@ -22,3 +22,12 @@ export interface CommunityEvent {
   interestedCount?: number;
   isInterested?: boolean;
 }
+
+export interface FinanceTransaction {
+  id: string;
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
+  note: string;
+  date: string; // ISO string
+}
