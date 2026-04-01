@@ -161,26 +161,29 @@ export default function FinancePage() {
   useSMSListener(handleIncomingTransaction);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col p-6 gap-6 relative pb-32">
+    <div className="min-h-screen bg-[#Fafafa] flex flex-col px-5 py-8 gap-8 relative pb-40">
       {/* Header */}
-      <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Finance Dashboard</h1>
+      <div className="flex flex-col gap-1 mt-4">
+        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tighter">Finance.</h1>
+        <p className="text-gray-400 font-medium text-sm">Monitor your activity</p>
+      </div>
 
       {/* Real-time Notification Toast */}
       {activeToast && (
         <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-sm animate-[slideIn_0.3s_ease-out]">
-          <div className="bg-gray-900 text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4 border border-white/10 backdrop-blur-xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                <span className="text-green-500 text-xl font-bold">₹</span>
+          <div className="bg-white/80 p-4 rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] flex items-center justify-between gap-4 border border-gray-100 backdrop-blur-2xl">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <span className="text-green-600 text-xl font-bold">₹</span>
               </div>
               <div>
-                <p className="text-sm font-bold text-white">Income Detected!</p>
-                <p className="text-[10px] text-gray-400 uppercase tracking-widest">₹{activeToast.amount.toLocaleString('en-IN')} via SMS</p>
+                <p className="text-sm font-bold text-gray-900">Income Detected!</p>
+                <p className="text-xs text-gray-500 font-medium">₹{activeToast.amount.toLocaleString('en-IN')} via SMS</p>
               </div>
             </div>
-            <button onClick={() => setActiveToast(null)} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            <button onClick={() => setActiveToast(null)} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
@@ -188,23 +191,34 @@ export default function FinancePage() {
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 shrink-0">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-1 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50" />
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest relative z-10">Total Balance</span>
-          <span className={`text-4xl font-black relative z-10 ${balance >= 0 ? 'text-blue-600' : 'text-red-500'}`}>
-            ₹{balance.toLocaleString('en-IN')}
+      <div className="grid grid-cols-1 gap-5 shrink-0">
+        <div className="bg-gray-900 text-white p-7 rounded-[2rem] shadow-[0_15px_40px_-10px_rgba(0,0,0,0.2)] flex flex-col gap-2 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none" />
+          <span className="text-sm font-medium text-gray-400">Current Balance</span>
+          <span className="text-[2.75rem] font-bold tracking-tighter leading-none mt-1 relative z-10 flex items-baseline">
+            <span className="text-2xl mr-1 font-medium text-gray-400">₹</span>
+            {Math.abs(balance).toLocaleString('en-IN')}
           </span>
         </div>
         
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-1">
-            <span className="text-xs font-bold text-green-500 uppercase tracking-widest">Income</span>
-            <span className="text-xl font-bold text-gray-800">₹{totals.income.toLocaleString('en-IN')}</span>
+          <div className="bg-white p-5 rounded-[1.5rem] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.06)] flex flex-col gap-2">
+            <div className="w-8 h-8 rounded-full bg-green-50 text-green-500 flex items-center justify-center mb-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <span className="text-xs font-semibold text-gray-400">Income</span>
+            <span className="text-xl font-bold text-gray-900 tracking-tight">₹{totals.income.toLocaleString('en-IN')}</span>
           </div>
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-1">
-            <span className="text-xs font-bold text-red-500 uppercase tracking-widest">Expenses</span>
-            <span className="text-xl font-bold text-gray-800">₹{totals.expense.toLocaleString('en-IN')}</span>
+          <div className="bg-white p-5 rounded-[1.5rem] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.06)] flex flex-col gap-2">
+            <div className="w-8 h-8 rounded-full bg-red-50 text-red-400 flex items-center justify-center mb-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4" />
+              </svg>
+            </div>
+            <span className="text-xs font-semibold text-gray-400">Expenses</span>
+            <span className="text-xl font-bold text-gray-900 tracking-tight">₹{totals.expense.toLocaleString('en-IN')}</span>
           </div>
         </div>
       </div>
@@ -214,18 +228,20 @@ export default function FinancePage() {
         <button
           onClick={handleScanSMS}
           disabled={isScanning}
-          className="w-full py-4 bg-blue-50 text-blue-600 font-bold rounded-2xl border-2 border-dashed border-blue-200 flex items-center justify-center gap-3 hover:bg-blue-100 transition-colors disabled:opacity-50"
+          className="w-full py-4 bg-white shadow-[0_4px_24px_-8px_rgba(0,0,0,0.06)] text-gray-900 font-bold rounded-[1.25rem] flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors disabled:opacity-50"
         >
           {isScanning ? (
-            <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin flex-shrink-0" />
           ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
+            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
           )}
-          {isScanning ? 'Scanning Inbox...' : 'Scan SMS for Income'}
+          {isScanning ? 'Syncing...' : 'Sync via SMS'}
         </button>
-        {scanError && <p className="text-xs text-center text-amber-600 font-medium">{scanError}</p>}
+        {scanError && <p className="text-xs text-center text-red-500 font-medium">{scanError}</p>}
       </div>
 
       {/* Detected Items Review Section */}
@@ -273,15 +289,13 @@ export default function FinancePage() {
       )}
 
       {/* Add Transaction Form */}
-      <form onSubmit={handleAddTransaction} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4">
-        <h2 className="text-lg font-bold text-gray-800">New Transaction</h2>
-        
-        <div className="flex bg-gray-100 p-1 rounded-xl">
+      <form onSubmit={handleAddTransaction} className="bg-white p-5 rounded-[1.5rem] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.06)] flex flex-col gap-4">
+        <div className="flex bg-gray-50 p-1.5 rounded-[1rem]">
           <button
             type="button"
             onClick={() => setType('expense')}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-              type === 'expense' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-300 ${
+              type === 'expense' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             Expense
@@ -289,61 +303,68 @@ export default function FinancePage() {
           <button
             type="button"
             onClick={() => setType('income')}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-              type === 'income' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-300 ${
+              type === 'income' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             Income
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            required
-            type="number"
-            step="0.01"
-            placeholder="Amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-gray-900 font-medium"
-          />
+        <div className="flex flex-col gap-3">
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">₹</span>
+            <input
+              required
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full pl-8 pr-4 py-3 bg-gray-50/50 border-none rounded-2xl focus:outline-none focus:bg-gray-100 transition-colors text-gray-900 font-bold placeholder:font-medium text-lg"
+            />
+          </div>
+          
           <input
             required
             type="text"
-            placeholder="Category"
+            placeholder="Category (e.g. Food, Salary)"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-gray-900 font-medium"
+            className="w-full px-4 py-3 bg-gray-50/50 border-none rounded-2xl focus:outline-none focus:bg-gray-100 transition-colors text-gray-900 font-medium"
+          />
+          
+          <input
+            type="text"
+            placeholder="Note (Optional)"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="w-full px-4 py-3 bg-gray-50/50 border-none rounded-2xl focus:outline-none focus:bg-gray-100 transition-colors text-gray-900 font-medium"
           />
         </div>
-        
-        <input
-          type="text"
-          placeholder="Note (optional)"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-gray-900 font-medium"
-        />
 
         <button
           type="submit"
-          className="w-full py-4 bg-gray-900 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-transform mt-2"
+          className="w-full py-4 mt-2 bg-gray-900 text-white font-bold rounded-2xl shadow-[0_8px_16px_-8px_rgba(0,0,0,0.3)] active:scale-[0.98] transition-all"
         >
-          Add Transaction
+          Add Record
         </button>
       </form>
 
       {/* Transaction History */}
-      <div className="flex flex-col gap-4 flex-1">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-bold text-gray-800">Transaction History</h2>
+      <div className="flex flex-col gap-5 flex-1 mt-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-end justify-between">
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight leading-none">Activity</h2>
+            <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">{transactions.length}</span>
+          </div>
           
           {/* Search Bar */}
           {transactions.length > 0 && (
             <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg className="h-4 w-4 text-gray-400 group-focus-within:text-gray-900 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
               <input
@@ -351,69 +372,69 @@ export default function FinancePage() {
                 placeholder="Search category or note..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="block w-full pl-11 pr-4 py-3.5 bg-white shadow-[0_4px_24px_-8px_rgba(0,0,0,0.04)] rounded-[1.25rem] text-sm placeholder-gray-400 focus:outline-none focus:bg-gray-50 transition-all font-medium text-gray-900 border-none"
               />
             </div>
           )}
         </div>
 
         {transactions.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex-1 flex flex-col items-center justify-center py-16 bg-transparent">
+            <div className="w-16 h-16 bg-gray-100 rounded-3xl flex items-center justify-center mb-4 text-gray-300">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p className="text-gray-500 font-medium">No transactions yet</p>
-            <p className="text-xs text-gray-400 mt-1">Your expenses & income will appear here</p>
+            <p className="text-gray-600 font-bold tracking-tight text-lg">No activity yet</p>
+            <p className="text-sm text-gray-400 mt-1 font-medium">Your entries will appear here</p>
           </div>
         ) : filteredTransactions.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 font-medium">No results found</p>
-            <p className="text-xs text-gray-400 mt-1">Try a different search term</p>
+          <div className="flex-1 flex flex-col items-center justify-center py-16">
+            <p className="text-gray-600 font-bold tracking-tight text-lg">No matches found</p>
+            <p className="text-sm text-gray-400 mt-1">Try a different search term</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-8 pb-10">
             {Object.keys(groupedTransactions).map((date) => (
-              <div key={date} className="flex flex-col gap-3">
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">{date}</h3>
-                <div className="flex flex-col gap-2">
+              <div key={date} className="flex flex-col gap-4">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1">{date}</h3>
+                <div className="flex flex-col gap-3">
                   {groupedTransactions[date].map((t) => (
-                    <div key={t.id} className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm group hover:border-blue-100 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${
-                          t.type === 'income' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                    <div key={t.id} className="bg-white p-4 rounded-[1.25rem] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] flex items-center justify-between group hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.08)] transition-all duration-300">
+                      <div className="flex items-center gap-4 cursor-default">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-105 shrink-0 ${
+                          t.type === 'income' ? 'bg-green-50 text-green-500' : 'bg-gray-50 text-gray-400'
                         }`}>
                           {t.type === 'income' ? (
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M7 11l5-5m0 0l5 5m-5-5v12" />
                             </svg>
                           ) : (
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 13l-5 5m0 0l-5-5m5 5V6" />
                             </svg>
                           )}
                         </div>
-                        <div>
-                          <p className="font-bold text-gray-900 leading-none mb-1">{t.category}</p>
-                          <p className="text-[11px] text-gray-400 font-medium truncate max-w-[150px]">{t.note || 'No description'}</p>
+                        <div className="flex flex-col justify-center">
+                          <p className="font-bold text-gray-900 tracking-tight text-base mb-0.5">{t.category}</p>
+                          {t.note && <p className="text-xs text-gray-400 font-medium truncate max-w-[140px]">{t.note}</p>}
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="text-right">
-                          <p className={`font-black text-base ${t.type === 'income' ? 'text-green-600' : 'text-red-900'}`}>
+                        <div className="text-right flex flex-col justify-center">
+                          <p className={`font-bold text-base tracking-tight ${t.type === 'income' ? 'text-green-500' : 'text-gray-900'}`}>
                             {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
                           </p>
-                          <p className="text-[9px] text-gray-300 font-bold uppercase tracking-tighter">
+                          <p className="text-[10px] text-gray-400 font-bold tracking-wider">
                             {new Date(t.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
                         <button 
                           onClick={() => removeTransaction(t.id)}
-                          className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 shrink-0"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
                       </div>
