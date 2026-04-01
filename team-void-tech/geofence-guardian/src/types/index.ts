@@ -19,4 +19,6 @@ export interface CommunityEvent {
   description: string;
   joined: boolean;
   coordinates?: GeoPosition;
+  interestedCount?: number;
+  isInterested?: boolean;
 }

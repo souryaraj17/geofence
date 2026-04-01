@@ -3,26 +3,7 @@ import { CommunityEvent } from '../types';
 
 const STORAGE_KEY = 'geofence_guardian_events';
 
-const MOCK_EVENTS: CommunityEvent[] = [
-  {
-    id: 'e1',
-    title: 'Local Park Cleanup',
-    location: 'Central Park West',
-    time: 'Saturday, 10:00 AM',
-    description: 'Join us to help clean up the park together.',
-    joined: false,
-    coordinates: { lat: 40.7829, lng: -73.9654 }
-  },
-  {
-    id: 'e2',
-    title: 'Neighborhood Watch Patrol',
-    location: 'Elm Street Comm. Center',
-    time: 'Tonight, 8:00 PM',
-    description: 'Evening patrol to keep the neighborhood secure.',
-    joined: false,
-    coordinates: { lat: 40.7812, lng: -73.9665 }
-  },
-];
+const MOCK_EVENTS: CommunityEvent[] = [];
 
 export function useCommunity() {
   const [events, setEvents] = useState<CommunityEvent[]>([]);
@@ -65,6 +46,8 @@ export function useCommunity() {
       ...eventData,
       id: Math.random().toString(36).substring(2, 9),
       joined: true, // Auto-join an event you create
+      isInterested: false,
+      interestedCount: 0,
     };
     setEvents((prev) => [newEvent, ...prev]);
   }, []);
@@ -72,6 +55,23 @@ export function useCommunity() {
   const joinEvent = useCallback((id: string) => {
     setEvents((prev) =>
       prev.map((e) => (e.id === id ? { ...e, joined: true } : e))
+    );
+  }, []);
+
+  const toggleInterested = useCallback((id: string) => {
+    setEvents((prev) =>
+      prev.map((e) => {
+        if (e.id === id) {
+          const isInterested = !e.isInterested;
+          const currentCount = e.interestedCount || 0;
+          return {
+            ...e,
+            isInterested,
+            interestedCount: isInterested ? currentCount + 1 : Math.max(0, currentCount - 1)
+          };
+        }
+        return e;
+      })
     );
   }, []);
 
@@ -84,6 +84,7 @@ export function useCommunity() {
     events,
     addEvent,
     joinEvent,
+    toggleInterested,
     removeEvent,
     isLoaded,
   };

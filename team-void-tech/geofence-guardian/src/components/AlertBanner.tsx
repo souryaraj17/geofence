@@ -55,3 +55,4 @@ export default function AlertBanner({ isVisible, onDismiss }: AlertBannerProps) 
     </div>
   );
 }
+
