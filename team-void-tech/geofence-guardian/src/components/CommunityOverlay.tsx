@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CommunityEvent, GeoPosition } from '../types';
 import EventCard from './EventCard';
-import { geocodeLocation } from '../utils/geocode';
+import { geocodeLocation, getNearbyLandmarks, Landmark } from '../utils/geocode';
 
 interface CommunityOverlayProps {
   isOpen: boolean;
@@ -10,6 +10,7 @@ interface CommunityOverlayProps {
   events: CommunityEvent[];
   addEvent: (eventData: Omit<CommunityEvent, 'id' | 'joined'>) => void;
   joinEvent: (id: string) => void;
+  toggleInterested: (id: string) => void;
   isLoaded: boolean;
   /** Called with the event the user wants to see on the map */
   onSelectEvent: (event: CommunityEvent) => void;
@@ -24,6 +25,7 @@ export default function CommunityOverlay({
   events,
   addEvent,
   joinEvent,
+  toggleInterested,
   isLoaded,
   onSelectEvent,
   removeEvent,
@@ -35,6 +37,22 @@ export default function CommunityOverlay({
   const [location, setLocation] = useState('');
   const [time, setTime] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedCoords, setSelectedCoords] = useState<GeoPosition | null>(null);
+
+  // Landmark state
+  const [landmarks, setLandmarks] = useState<Landmark[]>([]);
+  const [isLoadingLandmarks, setIsLoadingLandmarks] = useState(false);
+
+  // Fetch landmarks when entering create tab if we have user position
+  useEffect(() => {
+    if (activeTab === 'create' && userPosition && landmarks.length === 0) {
+      setIsLoadingLandmarks(true);
+      getNearbyLandmarks(userPosition.lat, userPosition.lng, 10).then((places) => {
+        setLandmarks(places);
+        setIsLoadingLandmarks(false);
+      });
+    }
+  }, [activeTab, userPosition, landmarks.length]);
 
   // Geocoding state
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -47,20 +65,32 @@ export default function CommunityOverlay({
     setIsGeocoding(true);
     setGeocodeError('');
 
-    // Try to geocode the location text → lat/lng
-    const coords = await geocodeLocation(location);
+    // Use selectedCoords if available, otherwise geocode the text
+    let coords: GeoPosition | null = selectedCoords;
+    
+    if (!coords) {
+      coords = await geocodeLocation(location);
+    }
 
     if (!coords) {
       // Non-blocking: warn the user but still allow submission
       setGeocodeError('Could not find coordinates for this location. Event will not appear on map.');
     }
 
+    const formattedTime = time ? new Date(time).toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }) : time;
+
     addEvent({
       title,
       location,
-      time,
+      time: formattedTime !== 'Invalid Date' ? formattedTime : time,
       description,
-      // Use geocoded coords if found, else fall back to userPosition, else undefined
+      // Use coords if found, else fall back to userPosition, else undefined
       coordinates: coords ?? (userPosition ?? undefined),
     });
 
@@ -69,6 +99,7 @@ export default function CommunityOverlay({
     setLocation('');
     setTime('');
     setDescription('');
+    setSelectedCoords(null);
     setGeocodeError('');
     setIsGeocoding(false);
     setActiveTab('events');
@@ -146,6 +177,7 @@ export default function CommunityOverlay({
                     onJoin={handleJoin}
                     onSelect={handleSelectEvent}
                     onRemove={removeEvent}
+                    onToggleInterested={toggleInterested}
                   />
                 ))
               )}
@@ -167,12 +199,64 @@ export default function CommunityOverlay({
 
               <div>
                 <label className="text-xs font-semibold text-gray-500 uppercase">Location</label>
-                <input
-                  required type="text" value={location}
-                  onChange={(e) => { setLocation(e.target.value); setGeocodeError(''); }}
-                  placeholder="e.g. Central Park, New York"
-                  className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white text-gray-900 font-medium"
-                />
+                <div className="flex flex-col gap-2 mt-1">
+                  <input
+                    required type="text" value={location}
+                    onChange={(e) => { 
+                      setLocation(e.target.value); 
+                      setSelectedCoords(null); // Reset explicit coords if user types manually
+                      setGeocodeError(''); 
+                    }}
+                    placeholder="e.g. Central Park"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white text-gray-900 font-medium"
+                  />
+                  
+                  {/* Nearby Landmarks Dropdown Menu */}
+                  <div className="mt-1">
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') return;
+                        const lm = landmarks.find((l) => l.name === val);
+                        if (lm) {
+                          setLocation(lm.name);
+                          setSelectedCoords({ lat: lm.lat, lng: lm.lng });
+                          setGeocodeError('');
+                        }
+                      }}
+                      className={`w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-medium cursor-pointer transition-colors ${
+                        isLoadingLandmarks ? 'bg-gray-100 text-gray-400' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                      }`}
+                      value=""
+                      disabled={isLoadingLandmarks || landmarks.length === 0}
+                    >
+                      {isLoadingLandmarks ? (
+                        <option value="" disabled>⏳ Finding nearby landmarks using GPS...</option>
+                      ) : !userPosition ? (
+                        <option value="" disabled>📡 GPS location required for suggestions</option>
+                      ) : landmarks.length === 0 ? (
+                        <option value="" disabled>No nearby landmarks found</option>
+                      ) : (
+                        <option value="" disabled>🎯 Select a nearby landmark...</option>
+                      )}
+                      
+                      {landmarks.map((lm, idx) => (
+                        <option key={idx} value={lm.name}>
+                          {lm.name} {
+                            lm.type === 'park' ? '🌳' : 
+                            lm.type === 'school' ? '🏫' : 
+                            lm.type === 'museum' ? '🏛️' : 
+                            lm.type === 'library' ? '📚' :
+                            lm.type === 'place_of_worship' ? '⛪' :
+                            lm.type === 'attraction' ? '✨' :
+                            lm.type === 'square' ? '⛲' :
+                            '📍'
+                          }
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
                 {geocodeError && (
                   <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
                     <span>⚠️</span> {geocodeError}
@@ -183,9 +267,8 @@ export default function CommunityOverlay({
               <div>
                 <label className="text-xs font-semibold text-gray-500 uppercase">Time</label>
                 <input
-                  required type="text" value={time}
+                  required type="datetime-local" value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  placeholder="e.g. Tomorrow, 6:00 PM"
                   className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white text-gray-900 font-medium"
                 />
               </div>

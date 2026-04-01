@@ -40,7 +40,7 @@ export default function GeofencePage() {
   const focusResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Lifed Community State
-  const { events, addEvent, joinEvent, removeEvent, isLoaded } = useCommunity();
+  const { events, addEvent, joinEvent, toggleInterested, removeEvent, isLoaded } = useCommunity();
 
   // Handle event selection: fly map to event then reset after animation
   const handleSelectEvent = useCallback((ev: CommunityEvent) => {
@@ -138,16 +138,14 @@ export default function GeofencePage() {
       {/* Community Button */}
       <button 
         onClick={() => setIsCommunityOpen(true)}
-        className="absolute top-6 right-4 z-40 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.1)] border border-white/20 text-blue-600 font-bold text-sm tracking-wide flex items-center gap-2 hover:bg-white transition-all active:scale-95"
+        className="absolute top-6 right-4 z-40 bg-slate-900 text-white hover:bg-slate-800 px-5 py-2.5 rounded-full shadow-sm font-bold text-sm tracking-wide flex items-center gap-2 transition-all active:scale-[0.98]"
       >
-        <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
         </svg>
-        Community
+        <span>Events</span>
       </button>
 
-      <AlertBanner isVisible={showAlert} onDismiss={() => setShowAlert(false)} />
-      
       <DynamicMapView
         userPosition={userPosition}
         safeZone={safeZone}
@@ -171,6 +169,7 @@ export default function GeofencePage() {
         events={events}
         addEvent={addEvent}
         joinEvent={joinEvent}
+        toggleInterested={toggleInterested}
         removeEvent={removeEvent}
         isLoaded={isLoaded}
         onSelectEvent={handleSelectEvent}

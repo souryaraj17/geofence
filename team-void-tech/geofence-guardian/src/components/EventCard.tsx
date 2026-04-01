@@ -8,6 +8,8 @@ interface EventCardProps {
   onSelect?: (event: CommunityEvent) => void;
   /** Called to permanently remove this event */
   onRemove?: (id: string) => void;
+  /** Called to toggle interested statys */
+  onToggleInterested?: (id: string) => void;
 }
 
 /** Opens Google Maps navigation to the event's coordinates in a new tab */
@@ -17,7 +19,7 @@ function openNavigation(event: CommunityEvent) {
   window.open(url, '_blank', 'noopener,noreferrer');
 }
 
-export default function EventCard({ event, onJoin, onSelect, onRemove }: EventCardProps) {
+export default function EventCard({ event, onJoin, onSelect, onRemove, onToggleInterested }: EventCardProps) {
   const hasCoords = !!event.coordinates;
 
   return (
@@ -55,19 +57,42 @@ export default function EventCard({ event, onJoin, onSelect, onRemove }: EventCa
 
       <p className="text-gray-600 mt-2 text-sm">{event.description}</p>
 
-      {/* Primary action: Join */}
-      <button
-        onClick={() => onJoin(event.id)}
-        disabled={event.joined}
-        className={`mt-3 py-2.5 px-4 rounded-lg font-bold text-sm transition-all duration-300 w-full
-          ${event.joined
-            ? 'bg-green-100 text-green-700 cursor-not-allowed'
-            : 'bg-blue-600 text-white shadow-md hover:bg-blue-700 active:scale-[0.98]'
-          }
-        `}
-      >
-        {event.joined ? '✓ Joined' : 'Join Event'}
-      </button>
+      {/* Primary action: Join & Interested */}
+      <div className="flex gap-2 mt-3">
+        <button
+          onClick={() => onJoin(event.id)}
+          disabled={event.joined}
+          className={`py-2.5 px-4 rounded-lg font-bold text-sm transition-all duration-300 flex-1
+            ${event.joined
+              ? 'bg-green-100 text-green-700 cursor-not-allowed'
+              : 'bg-blue-600 text-white shadow-md hover:bg-blue-700 active:scale-[0.98]'
+            }
+          `}
+        >
+          {event.joined ? '✓ Joined' : 'Join Event'}
+        </button>
+
+        {onToggleInterested && (
+          <button
+            onClick={() => onToggleInterested(event.id)}
+            className={`py-2.5 px-4 rounded-lg font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 border flex-[0.5]
+              ${event.isInterested
+                ? 'bg-pink-50 border-pink-200 text-pink-600 shadow-sm'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+              }
+            `}
+          >
+            <svg 
+              className={`w-4 h-4 ${event.isInterested ? 'fill-current' : 'fill-none'}`} 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <span>{event.interestedCount || 0}</span>
+          </button>
+        )}
+      </div>
 
       {/* Secondary actions row — only shown when coordinates are available */}
       {hasCoords && (
